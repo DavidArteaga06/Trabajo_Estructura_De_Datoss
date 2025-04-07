@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes - Lista Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-salir {
+            background-color: #f44336;
+        }
+        .button-salir:hover {
+            background-color: #da190b;
+        }
+        .button-listar {
+            background-color: #2196F3;
+        }
+        .button-listar:hover {
+            background-color: #0b7dda;
+        }
+        .cliente-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .cliente-item:hover {
+            background-color: #f9f9f9;
+        }
+        .menu {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        #clientes-container {
+            margin-top: 20px;
+        }
+        .alert {
+            padding: 10px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestión de Clientes - Lista Simple</h1>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="form-group">
+            <label for="cedula">Cédula:</label>
+            <input type="text" id="cedula" placeholder="Ingrese la cédula del cliente">
+        </div>
+        
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" placeholder="Ingrese el nombre del cliente">
+        </div>
+        
+        <div class="menu">
+            <button id="btn-insertar">Insertar Cliente</button>
+            <button id="btn-listar" class="button-listar">Listar Clientes</button>
+            <button id="btn-salir" class="button-salir">Salir</button>
+        </div>
+        
+        <div id="clientes-container"></div>
+    </div>
+
+    <script>
+        /**
+         * Clase Cliente - Almacena la información básica de un cliente
+         */
+        class Cliente {
+            /**
+             * Constructor para crear un nuevo cliente
+             * @param {string} cedula - Número de identificación del cliente
+             * @param {string} nombre - Nombre completo del cliente
+             */
+            constructor(cedula, nombre) {
+                this.cedula = cedula;
+                this.nombre = nombre;
+            }
+        }
+
+        /**
+         * Clase Nodo - Elemento base de la estructura de datos lista enlazada
+         * Cada nodo contiene un cliente y una referencia al siguiente nodo
+         */
+        class Nodo {
+            /**
+             * Constructor para crear un nuevo nodo
+             * @param {Cliente} cliente - Cliente a almacenar en este nodo
+             */
+            constructor(cliente) {
+                this.cliente = cliente;
+                this.siguiente = null;
+            }
+        }
+
+        /**
+         * Clase ListaSimple - Implementa una lista enlazada simple para almacenar clientes
+         */
+        class ListaSimple {
+            /**
+             * Constructor para crear una nueva lista simple
+             */
+            constructor() {
+                this.cabeza = null;
+                this.size = 0;
+            }
+
+            /**
+             * Inserta un cliente de forma ordenada según la cédula
+             * @param {Cliente} cliente - Cliente a insertar en la lista
+             */
+            insertarOrdenado(cliente) {
+                // Crear un nuevo nodo con el cliente
+                const nuevoNodo = new Nodo(cliente);
+                
+                // Si la lista está vacía o el cliente tiene una cédula menor que la cabeza
+                if (this.cabeza === null || cliente.cedula.localeCompare(this.cabeza.cliente.cedula) < 0) {
+                    nuevoNodo.siguiente = this.cabeza;
+                    this.cabeza = nuevoNodo;
+                } else {
+                    // Buscar la posición correcta para insertar
+                    let actual = this.cabeza;
+                    let anterior = null;
+                    
+                    while (actual !== null && cliente.cedula.localeCompare(actual.cliente.cedula) > 0) {
+                        anterior = actual;
+                        actual = actual.siguiente;
+                    }
+                    
+                    // Insertar el nuevo nodo en la posición correcta
+                    anterior.siguiente = nuevoNodo;
+                    nuevoNodo.siguiente = actual;
+                }
+                
+                this.size++;
+                return true;
+            }
+
+            /**
+             * Obtiene todos los clientes en la lista
+             * @return {Array} - Array con todos los clientes
+             */
+            listarClientes() {
+                const clientes = [];
+                let actual = this.cabeza;
+                
+                while (actual !== null) {
+                    clientes.push(actual.cliente);
+                    actual = actual.siguiente;
+                }
+                
+                return clientes;
+            }
+
+            /**
+             * Verifica si una cédula ya existe en la lista
+             * @param {string} cedula - Cédula a verificar
+             * @return {boolean} - True si la cédula ya existe, false en caso contrario
+             */
+            existeCedula(cedula) {
+                let actual = this.cabeza;
+                
+                while (actual !== null) {
+                    if (actual.cliente.cedula === cedula) {
+                        return true;
+                    }
+                    actual = actual.siguiente;
+                }
+                
+                return false;
+            }
+        }
+
+        // Crear una instancia de la lista simple
+        const listaClientes = new ListaSimple();
+
+        // Elementos del DOM
+        const btnInsertar = document.getElementById('btn-insertar');
+        const btnListar = document.getElementById('btn-listar');
+        const btnSalir = document.getElementById('btn-salir');
+        const cedulaInput = document.getElementById('cedula');
+        const nombreInput = document.getElementById('nombre');
+        const clientesContainer = document.getElementById('clientes-container');
+        const alertDiv = document.getElementById('alert');
+
+        /**
+         * Muestra un mensaje de alerta
+         * @param {string} mensaje - Mensaje a mostrar
+         * @param {boolean} esExito - Indica si es un mensaje de éxito o error
+         */
+        function mostrarAlerta(mensaje, esExito = false) {
+            alertDiv.textContent = mensaje;
+            alertDiv.style.display = 'block';
+            
+            if (esExito) {
+                alertDiv.classList.add('success');
+            } else {
+                alertDiv.classList.remove('success');
+            }
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        /**
+         * Maneja el evento de insertar un cliente
+         */
+        btnInsertar.addEventListener('click', () => {
+            const cedula = cedulaInput.value.trim();
+            const nombre = nombreInput.value.trim();
+            
+            if (cedula === '' || nombre === '') {
+                mostrarAlerta('Por favor ingrese todos los campos');
+                return;
+            }
+            
+            if (listaClientes.existeCedula(cedula)) {
+                mostrarAlerta('La cédula ya existe en la lista');
+                return;
+            }
+            
+            const nuevoCliente = new Cliente(cedula, nombre);
+            listaClientes.insertarOrdenado(nuevoCliente);
+            
+            mostrarAlerta('Cliente insertado correctamente', true);
+            
+            // Limpiar campos
+            cedulaInput.value = '';
+            nombreInput.value = '';
+        });
+
+        /**
+         * Maneja el evento de listar los clientes
+         */
+        btnListar.addEventListener('click', () => {
+            const clientes = listaClientes.listarClientes();
+            
+            clientesContainer.innerHTML = '';
+            
+            if (clientes.length === 0) {
+                clientesContainer.innerHTML = '<p>No hay clientes en la lista</p>';
+                return;
+            }
+            
+            for (const cliente of clientes) {
+                const clienteDiv = document.createElement('div');
+                clienteDiv.className = 'cliente-item';
+                clienteDiv.innerHTML = `
+                    <span><strong>Cédula:</strong> ${cliente.cedula}</span>
+                    <span><strong>Nombre:</strong> ${cliente.nombre}</span>
+                `;
+                clientesContainer.appendChild(clienteDiv);
+            }
+        });
+
+        /**
+         * Maneja el evento de salir
+         */
+        btnSalir.addEventListener('click', () => {
+            if (confirm('¿Está seguro que desea salir?')) {
+                window.close();
+                // Nota: En muchos navegadores modernos, window.close() solo funciona en ventanas abiertas por JavaScript
+                alert('Para cerrar completamente la aplicación, cierre esta pestaña del navegador.');
+            }
+        });
+    </script>
+</body>
+</html>
